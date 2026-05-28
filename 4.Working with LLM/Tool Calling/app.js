@@ -80,5 +80,7 @@ main();
 async function webSearch({ query }) {
   // Here api call of tavily
   console.log("Calling webSearch...");
+
+  const response = await tvly.search(query);
   return "Iphone was launched in 20 september 2024.";
 }
