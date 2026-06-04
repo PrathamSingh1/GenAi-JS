@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 function App() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -27,22 +28,28 @@ function App() {
   };
 
   async function generate(message) {
+    setLoading(true);
     // append message to ui
     setMessages((prev) => [...prev, { role: "user", content: message }]);
     // send it to LLM
-    const response = await fetch("http://localhost:3001/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message }),
-    });
+    try {
+      const response = await fetch("http://localhost:3001/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      });
 
-    const data = await response.json();
-    console.log(data);
-    const reply = data.message;
-    // append response to ui
-    setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      const data = await response.json();
+      const reply = data.message;
+
+      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const handleEnter = (e) => {
@@ -85,7 +92,6 @@ function App() {
                 {msg.content}
               </div>
             ) : (
-              // Assistant message
               <div
                 key={i}
                 className="max-w-fit rounded-xl my-4 prose prose-invert prose-md"
@@ -94,6 +100,7 @@ function App() {
               </div>
             ),
           )}
+          {loading && <div className="my-4 text-neutral-400">Thinking...</div>}
           <div ref={messagesEndRef} />
         </div>
       </div>
