@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { tavily } from "@tavily/core";
-import readLine from "node:readline/promises";
+import NodeCache from "node-cache";
 
 // import OpenAI from "openai";
 import Groq from "groq-sdk/index.js";
@@ -15,8 +15,10 @@ const client = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-export async function generate(userMessage) {
-  const messages = [
+const cache = new NodeCache({ stdTTL: 60 * 60 * 24 }); // 24 hours
+
+export async function generate(userMessage, threadId) {
+  const baseMessages = [
     {
       role: "system",
       content: `You are a smart personal assistant, who answers the asked questions.
@@ -31,6 +33,8 @@ export async function generate(userMessage) {
     //   // When was iphon 16 launched?
     // },
   ];
+
+  const messages = cache.get(threadId) ?? baseMessages;
 
   messages.push({
     role: "user",
@@ -70,6 +74,9 @@ export async function generate(userMessage) {
     const toolCalls = response.choices[0].message.tool_calls;
 
     if (!toolCalls) {
+      // here we end the chatbot response
+      cache.set(threadId, messages);
+      console.log(cache);
       return response.choices[0].message.content;
     }
 

@@ -9,6 +9,10 @@ function App() {
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
 
+  const threadIdRef = useRef(
+    Date.now().toString(36) + Math.random().toString(36).substring(2, 8),
+  );
+
   const handleInput = () => {
     const textarea = textareaRef.current;
 
@@ -38,7 +42,7 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, threadId: threadIdRef.current }),
       });
 
       const data = await response.json();
@@ -100,7 +104,11 @@ function App() {
               </div>
             ),
           )}
-          {loading && <div className="my-4 text-neutral-400">Thinking...</div>}
+          {loading && (
+            <div className="my-4 text-neutral-400 animate-pulse">
+              Thinking...
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
       </div>
